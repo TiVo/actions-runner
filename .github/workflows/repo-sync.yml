@@ -24,4 +24,4 @@ jobs:
           source_branch: ${{ secrets.FORK_SYNC_INTERMEDIATE_BRANCH }}
           destination_branch: main
           pr_title: "[Automated] ${{ github.ref }} into main"
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.TIVOBOT_GITHUB_ACTION_TOKEN }}
