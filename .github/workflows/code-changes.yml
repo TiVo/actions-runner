@@ -19,13 +19,19 @@ jobs:
           ref: ${{ env.TargetRepo }}
       - name: Disable Docker-in-Docker check
         run: |
-          sed -i -e "/ServiceController\[\] scServices = ServiceController.GetServices();/,+4 s/^/\/\//" src/Runner.Worker/ContainerOperationProvider.cs && 
-          sed -i -e "/var initProcessCgroup = File.ReadLines(\"\/proc\/1\/cgroup\");/,+4 s/^/\/\//" src/Runner.Worker/ContainerOperationProvider.cs
+          if [[ ! $(egrep "^\/\/\s+ServiceController\[\] scServices = ServiceController.GetServices\(\);" src/Runner.Worker/ContainerOperationProvider.cs) ]]; then
+            sed -i -e "/ServiceController\[\] scServices = ServiceController.GetServices();/,+4 s/^/\/\//" src/Runner.Worker/ContainerOperationProvider.cs
+          fi && 
+          if [[ ! $(egrep "^\/\/\s+var initProcessCgroup = File.ReadLines\(\"\/proc\/1\/cgroup\"\);" src/Runner.Worker/ContainerOperationProvider.cs) ]]; then 
+            sed -i -e "/var initProcessCgroup = File.ReadLines(\"\/proc\/1\/cgroup\");/,+4 s/^/\/\//" src/Runner.Worker/ContainerOperationProvider.cs; 
+          fi
       - name: Fix project git command path
         run: |
-          sed -i 's/git update-index --assume-unchanged .\/Runner.Sdk\/BuildConstants.cs/&\//' src/dir.proj
+          if [[ ! $(grep "git update-index --assume-unchanged ./Runner.Sdk/BuildConstants.cs/" src/dir.proj) ]]; then
+            sed -i 's/git update-index --assume-unchanged .\/Runner.Sdk\/BuildConstants.cs/&\//' src/dir.proj;
+          fi
       - name: Commit changes to ${{ env.TargetRepo }}
         uses: EndBug/add-and-commit@v9
         with:
-          message: "[Automated] Code changes"
+          message: "[Automated] rm Docker-in-Docker check && git path fix"
           add: '["src/Runner.Worker/ContainerOperationProvider.cs", "src/dir.proj"]'
