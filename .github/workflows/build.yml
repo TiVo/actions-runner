@@ -4,8 +4,9 @@ on:
   workflow_dispatch:
   push:
     branches:
-    - main
-    - releases/*
+    # - main
+    # - releases/*
+    - tivo-build
     paths-ignore:
     - '**.md'
   pull_request:
