@@ -2,13 +2,16 @@ name: Code Changes
 
 on:
   workflow_run:
-    workflows: ["Repo Sync"]
-    types:
-      - completed
+    pull_request:
+      types:
+        - opened
+      branches:
+        - "tivo-build"
   workflow_dispatch:
 
 jobs:
   code-changes:
+    if: github.ref == 'refs/heads/tivo-build'
     runs-on: ubuntu-latest
     env:
       TargetRepo: repo-sync
