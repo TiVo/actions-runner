@@ -37,4 +37,4 @@ jobs:
         uses: EndBug/add-and-commit@v9
         with:
           message: "[Automated] rm Docker-in-Docker check && git path fix"
-          add: '["src/Runner.Worker/ContainerOperationProvider.cs", "src/dir.proj"]'
+          add: '["src/Runner.Worker/ContainerOperationProvider.cs", "src/dir.proj", "./releaseVersion"]'
