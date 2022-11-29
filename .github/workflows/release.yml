@@ -592,7 +592,7 @@ jobs:
         asset_path: ${{ github.workspace }}/linux-x64-trimmedpackages.json
         asset_name: actions-runner-linux-x64-${{ steps.releaseNote.outputs.version }}-trimmedpackages.json
         asset_content_type: application/octet-stream
-
+        
     # - name: Upload Release Asset (osx-x64-trimmedpackages.json)
     #   uses: actions/upload-release-asset@v1.0.1
     #   env:
