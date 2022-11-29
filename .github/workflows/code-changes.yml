@@ -1,12 +1,11 @@
 name: Code Changes
 
 on:
-  workflow_run:
-    pull_request:
-      types:
-        - opened
-      branches:
-        - "tivo-build"
+  pull_request:
+    types:
+      - opened
+    branches:
+      - "tivo-build"
   workflow_dispatch:
 
 jobs:
