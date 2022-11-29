@@ -39,5 +39,5 @@ jobs:
       - name: Commit changes to ${{ env.TargetRepo }}
         uses: EndBug/add-and-commit@v9
         with:
-          message: "[Automated] rm Docker-in-Docker check && git path fix"
+          message: "[Automated] apply runner version && rm Docker-in-Docker check"
           add: '["src/Runner.Worker/ContainerOperationProvider.cs", "src/dir.proj", "./releaseVersion"]'
