@@ -10,7 +10,7 @@ on:
 
 jobs:
   code-changes:
-    if: github.ref == 'refs/heads/tivo-build'
+    if: contains(github.event.pull_request.labels.*.name, "repo-sync-automated")
     runs-on: ubuntu-latest
     env:
       TargetRepo: repo-sync
