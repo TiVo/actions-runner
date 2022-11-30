@@ -1,16 +1,10 @@
 name: Code Changes
 
 on:
-  pull_request:
-    types:
-      - labeled
-    branches:
-      - "tivo-build"
   workflow_dispatch:
 
 jobs:
   code-changes:
-    if: ${{ github.event.label.name == 'repo-sync-automated' }}
     runs-on: ubuntu-latest
     env:
       TargetRepo: repo-sync
