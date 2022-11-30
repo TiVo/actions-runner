@@ -4,13 +4,14 @@ on:
   pull_request:
     types:
       - opened
+      - labeled
     branches:
       - "tivo-build"
   workflow_dispatch:
 
 jobs:
   code-changes:
-    if: contains(github.event.pull_request.labels.*.name, "repo-sync-automated")
+    if: ${{ github.event.label.name == 'repo-sync-automated' }}
     runs-on: ubuntu-latest
     env:
       TargetRepo: repo-sync
