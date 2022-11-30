@@ -3,7 +3,6 @@ name: Code Changes
 on:
   pull_request:
     types:
-      - opened
       - labeled
     branches:
       - "tivo-build"
