@@ -16,6 +16,8 @@ jobs:
   repo-sync:
     name: Repo Sync
     runs-on: ubuntu-latest
+    env:
+      PRDestinationBranch: ${{ github.event_name == 'schedule' && 'tivo-build' || github.event.inputs.pr_destination_branch }}
     steps:
       - uses: actions/checkout@v2
       - uses: repo-sync/github-sync@v2
