@@ -204,13 +204,24 @@ namespace GitHub.Runner.Worker
                     }
                 }
 
-                var attachmentName = !context.IsEmbedded 
-                    ? context.Id.ToString() 
+                var attachmentName = !context.IsEmbedded
+                    ? context.Id.ToString()
                     : context.EmbeddedId.ToString();
 
-                Trace.Info($"Queueing file ({filePath}) for attachment upload ({attachmentName})");
-                // Attachments must be added to the parent context (job), not the current context (step)
-                context.Root.QueueAttachFile(ChecksAttachmentType.StepSummary, attachmentName, scrubbedFilePath);
+                context.Global.Variables.TryGetValue("system.github.results_endpoint", out string resultsReceiverEndpoint);
+                if (resultsReceiverEndpoint != null)
+                {
+                    Trace.Info($"Queueing results file ({filePath}) for attachment upload ({attachmentName})");
+                    var stepId = context.Id.ToString();
+                    // Attachments must be added to the parent context (job), not the current context (step)
+                    context.Root.QueueSummaryFile(attachmentName, scrubbedFilePath, stepId);
+                }
+                else
+                {
+                    Trace.Info($"Queueing file ({filePath}) for attachment upload ({attachmentName})");
+                    // Attachments must be added to the parent context (job), not the current context (step)
+                    context.Root.QueueAttachFile(ChecksAttachmentType.StepSummary, attachmentName, scrubbedFilePath);
+                }
             }
             catch (Exception e)
             {
