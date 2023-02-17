@@ -1,15 +1,17 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using GitHub.DistributedTask.Pipelines;
+using GitHub.DistributedTask.WebApi;
 using GitHub.Services.Common;
 using GitHub.Services.OAuth;
 using GitHub.Services.WebApi;
 using Sdk.WebApi.WebApi;
 
-namespace GitHub.DistributedTask.WebApi
+namespace GitHub.Actions.RunService.WebApi
 {
-    [ResourceArea(TaskResourceIds.AreaId)]
     public class RunServiceHttpClient : RawHttpClientBase
     {
         public RunServiceHttpClient(
@@ -52,22 +54,52 @@ namespace GitHub.DistributedTask.WebApi
         {
         }
 
-        public Task<Pipelines.AgentJobRequestMessage> GetJobMessageAsync(
+        public Task<AgentJobRequestMessage> GetJobMessageAsync(
             Uri requestUri,
             string messageId,
             CancellationToken cancellationToken = default)
         {
             HttpMethod httpMethod = new HttpMethod("POST");
-            var payload = new {
+            var payload = new AcquireJobRequest
+            {
                 StreamID = messageId
             };
 
-            var payloadJson = JsonUtility.ToString(payload);
-            var requestContent = new StringContent(payloadJson, System.Text.Encoding.UTF8, "application/json");
-            return SendAsync<Pipelines.AgentJobRequestMessage>(
+            requestUri = new Uri(requestUri, "acquirejob");
+
+            var requestContent = new ObjectContent<AcquireJobRequest>(payload, new VssJsonMediaTypeFormatter(true));
+            return SendAsync<AgentJobRequestMessage>(
                 httpMethod,
-                additionalHeaders: null,
                 requestUri: requestUri,
+                content: requestContent,
+                cancellationToken: cancellationToken);
+        }
+
+        public Task CompleteJobAsync(
+            Uri requestUri,
+            Guid planId,
+            Guid jobId,
+            TaskResult result,
+            Dictionary<String, VariableValue> outputs,
+            IList<StepResult> stepResults,
+            CancellationToken cancellationToken = default)
+        {
+            HttpMethod httpMethod = new HttpMethod("POST");
+            var payload = new CompleteJobRequest()
+            {
+                PlanID = planId,
+                JobID = jobId,
+                Conclusion = result,
+                Outputs = outputs,
+                StepResults = stepResults
+            };
+
+            requestUri = new Uri(requestUri, "completejob");
+
+            var requestContent = new ObjectContent<CompleteJobRequest>(payload, new VssJsonMediaTypeFormatter(true));
+            return SendAsync(
+                httpMethod,
+                requestUri,
                 content: requestContent,
                 cancellationToken: cancellationToken);
         }
