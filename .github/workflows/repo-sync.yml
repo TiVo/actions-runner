@@ -20,7 +20,7 @@ jobs:
     env:
       PRDestinationBranch: ${{ github.event_name == 'schedule' && 'tivo-build' || inputs.pr_destination_branch }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: repo-sync/github-sync@v2
         name: Sync repo to branch
         with:
