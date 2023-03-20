@@ -8,7 +8,7 @@ on:
       - labeled
       - synchronize
     branches:
-      - repo-sync
+      - tivo-build
   workflow_dispatch:
 
 jobs:
