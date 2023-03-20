@@ -520,18 +520,18 @@ namespace GitHub.Runner.Worker
 #if OS_WINDOWS
 #pragma warning disable CA1416
             // service CExecSvc is Container Execution Agent.
-            ServiceController[] scServices = ServiceController.GetServices();
-            if (scServices.Any(x => String.Equals(x.ServiceName, "cexecsvc", StringComparison.OrdinalIgnoreCase) && x.Status == ServiceControllerStatus.Running))
-            {
-                throw new NotSupportedException("Container feature is not supported when runner is already running inside container.");
-            }
+            // ServiceController[] scServices = ServiceController.GetServices();
+            // if (scServices.Any(x => String.Equals(x.ServiceName, "cexecsvc", StringComparison.OrdinalIgnoreCase) && x.Status == ServiceControllerStatus.Running))
+            // {
+            //     throw new NotSupportedException("Container feature is not supported when runner is already running inside container.");
+            // }
 #pragma warning restore CA1416
 #else
             var initProcessCgroup = File.ReadLines("/proc/1/cgroup");
-            if (initProcessCgroup.Any(x => x.IndexOf(":/docker/", StringComparison.OrdinalIgnoreCase) >= 0))
-            {
-                throw new NotSupportedException("Container feature is not supported when runner is already running inside container.");
-            }
+            // if (initProcessCgroup.Any(x => x.IndexOf(":/docker/", StringComparison.OrdinalIgnoreCase) >= 0))
+            // {
+            //     throw new NotSupportedException("Container feature is not supported when runner is already running inside container.");
+            // }
 #endif
 
 #if OS_WINDOWS
