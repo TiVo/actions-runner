@@ -3,13 +3,9 @@ name: Code Changes
 on:
   pull_request:
     types:
-      - opened
-      - reopened
       - labeled
-      - synchronize
     branches:
       - tivo-build
-  workflow_dispatch:
 
 jobs:
   code-changes:
