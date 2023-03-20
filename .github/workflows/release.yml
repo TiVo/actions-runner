@@ -133,7 +133,7 @@ jobs:
         file=$(ls)
         sha=$(sha256sum $file | awk '{ print $1 }')
         echo "Computed sha256: $sha for $file"
-        echo "::set-output name=${{matrix.runtime}}-sha256::$sha"
+        echo "${{matrix.runtime}}-sha256=$sha" >> $GITHUB_OUTPUT
       shell: bash
       id: sha
       name: Compute SHA256
@@ -142,8 +142,8 @@ jobs:
         file=$(ls)
         sha=$(sha256sum $file | awk '{ print $1 }')
         echo "Computed sha256: $sha for $file"
-        echo "::set-output name=${{matrix.runtime}}-sha256::$sha"
-        echo "::set-output name=sha256::$sha"
+        echo "${{matrix.runtime}}-sha256=$sha" >> $GITHUB_OUTPUT
+        echo "sha256=$sha" >> $GITHUB_OUTPUT
       shell: bash
       id: sha_noexternals
       name: Compute SHA256
@@ -152,8 +152,8 @@ jobs:
         file=$(ls)
         sha=$(sha256sum $file | awk '{ print $1 }')
         echo "Computed sha256: $sha for $file"
-        echo "::set-output name=${{matrix.runtime}}-sha256::$sha"
-        echo "::set-output name=sha256::$sha"
+        echo "${{matrix.runtime}}-sha256=$sha" >> $GITHUB_OUTPUT
+        echo "sha256=$sha" >> $GITHUB_OUTPUT
       shell: bash
       id: sha_noruntime
       name: Compute SHA256
@@ -162,8 +162,8 @@ jobs:
         file=$(ls)
         sha=$(sha256sum $file | awk '{ print $1 }')
         echo "Computed sha256: $sha for $file"
-        echo "::set-output name=${{matrix.runtime}}-sha256::$sha"
-        echo "::set-output name=sha256::$sha"
+        echo "${{matrix.runtime}}-sha256=$sha" >> $GITHUB_OUTPUT
+        echo "sha256=$sha" >> $GITHUB_OUTPUT
       shell: bash
       id: sha_noruntime_noexternals
       name: Compute SHA256
