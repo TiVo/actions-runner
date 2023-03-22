@@ -39,7 +39,7 @@ jobs:
           || echo "runner_version_mismatch=false" >> $GITHUB_OUTPUT
 
   repo-sync:
-    name: "Sync upstream changes to ${{ env.PR_DESTINATION_BRANCH }} branch"
+    name: "Sync upstream changes to tivo-build branch"
     if: needs.get-runner-versions.outputs.runner_version_mismatch == 'true'
     needs: get-runner-versions
     runs-on: ubuntu-latest
