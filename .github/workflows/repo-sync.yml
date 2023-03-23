@@ -48,7 +48,6 @@ jobs:
       GH_RUNNER_VERSION_UPSTREAM: ${{ needs.get-runner-versions.outputs.runner_version_upstream }}
       GH_RUNNER_VERSION_TIVO: ${{ needs.get-runner-versions.outputs.runner_version_tivo }}
     steps:
-      - run: echo "bruh"
       - name: Perform checkout
         uses: actions/checkout@v3
       - name: Sync repo to branch
