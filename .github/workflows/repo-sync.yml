@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  PR_DESTINATION_BRANCH: 'tivo-build'
+  DESTINATION_BRANCH: 'tivo-build'
 
 jobs:
   get-runner-versions:
@@ -50,38 +50,29 @@ jobs:
     steps:
       - name: Perform checkout
         uses: actions/checkout@v3
-      - name: Sync repo to branch
-        uses: repo-sync/github-sync@v2
         with:
-          source_repo: ${{ secrets.REPO_SYNC_SOURCE_REPO }}
-          source_branch: v${{ env.GH_RUNNER_VERSION_UPSTREAM }}
-          destination_branch: ${{ secrets.REPO_SYNC_INTERMEDIATE_BRANCH }}
-          github_token: ${{ secrets.TIVOBOT_GITHUB_ACTION_TOKEN }}
-      # - uses: repo-sync/pull-request@v2
-      # use fix-diff version because of HTTP 422 errors
-      # https://github.com/repo-sync/pull-request/issues/119
-      - name: Create pull request
-        uses: repo-sync/pull-request@fix-diff
+          ref: ${{ env.DESTINATION_BRANCH }}
+      - name: Sync upstream changes
+        id: sync
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4
         with:
-          source_branch: ${{ secrets.REPO_SYNC_INTERMEDIATE_BRANCH }}
-          destination_branch: ${{ env.PR_DESTINATION_BRANCH }}
-          pr_title: "[Automated] ${{ github.ref }} into ${{ env.PR_DESTINATION_BRANCH }}"
-          pr_label: "repo-sync-automated"
-          pr_allow_empty: true
-          github_token: ${{ secrets.TIVOBOT_GITHUB_ACTION_TOKEN }}
-
+          target_sync_branch: ${{ env.DESTINATION_BRANCH }}
+          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+          upstream_sync_branch: v${{ env.GH_RUNNER_VERSION_UPSTREAM }}
+          upstream_sync_repo: actions/runner
+          upstream_repo_access_token: ${{ secrets.TIVOBOT_GITHUB_ACTION_TOKEN }}
+          upstream_pull_args: '-s recursive -Xtheirs' # overwrite everything in tivo-build branch
+          test_mode: false
   code-changes:
     name: "Code changes"
     if: needs.get-runner-versions.outputs.runner_version_mismatch == 'true'
     needs: [get-runner-versions, repo-sync]
     runs-on: ubuntu-latest
-    env:
-      TargetBranch: repo-sync
     steps:
       - name: Perform checkout
         uses: actions/checkout@v3
         with:
-          ref: ${{ env.TargetBranch }}
+          ref: ${{ env.DESTINATION_BRANCH }}
       - name: Perform code changes
         # The following code changes will disable the docker-in-docker checks found in ./src/Runner.Worker/ContainerOperationProvider.cs 
         # and fixes a git command path issue in ./src/dir.proj
@@ -95,7 +86,7 @@ jobs:
           if [[ ! $(grep "git update-index --assume-unchanged ./Runner.Sdk/BuildConstants.cs/" src/dir.proj) ]]; then
             sed -i 's/git update-index --assume-unchanged .\/Runner.Sdk\/BuildConstants.cs/&\//' src/dir.proj;
           fi
-      - name: Commit changes to ${{ env.TargetBranch }}
+      - name: Commit changes to ${{ env.DESTINATION_BRANCH }}
         uses: EndBug/add-and-commit@v9
         with:
           message: "[Automated] rm Docker-in-Docker check and fix git cmd build issue"
