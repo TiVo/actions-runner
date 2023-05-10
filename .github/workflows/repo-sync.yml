@@ -10,18 +10,70 @@ jobs:
     name: Repo Sync
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: repo-sync/github-sync@v2
-        name: Sync repo to branch
+      - name: Perform checkout
+        uses: actions/checkout@v3
+        # with:
+        #   fetch-depth: 0
+      - name: Sync repo to branch
+        uses: repo-sync/github-sync@v2
         with:
           source_repo: ${{ secrets.REPO_SYNC_SOURCE_REPO }}
-          source_branch: main
-          destination_branch: ${{ secrets.FORK_SYNC_INTERMEDIATE_BRANCH }}
+          # source_branch: tags/v${{ env.GH_RUNNER_VERSION_UPSTREAM }}
+          source_branch: "main"
+          destination_branch: ${{ secrets.REPO_SYNC_INTERMEDIATE_BRANCH }}
           github_token: ${{ secrets.TIVOBOT_GITHUB_ACTION_TOKEN }}
-      - uses: repo-sync/pull-request@v2
-        name: Create pull request
+          sync_tags: true
+      # # - uses: repo-sync/pull-request@v2
+      # # use fix-diff version because of HTTP 422 errors
+      # # https://github.com/repo-sync/pull-request/issues/119
+      # - name: Create pull request
+      #   # uses: repo-sync/pull-request@fix-diff
+      #   uses: repo-sync/pull-request@v2
+      #   with:
+      #     # source_branch: ${{ secrets.REPO_SYNC_INTERMEDIATE_BRANCH }}
+      #     source_branch: "v${{ env.GH_RUNNER_VERSION_UPSTREAM }}"
+      #     destination_branch: "origin/${{ env.PR_DESTINATION_BRANCH }}"
+      #     pr_title: "[Automated] v${{ env.GH_RUNNER_VERSION_UPSTREAM }} into ${{ env.PR_DESTINATION_BRANCH }}"
+      #     pr_label: "repo-sync-automated"
+      #     pr_allow_empty: true
+      #     github_token: ${{ secrets.TIVOBOT_GITHUB_ACTION_TOKEN }}
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v5
         with:
-          source_branch: ${{ secrets.FORK_SYNC_INTERMEDIATE_BRANCH }}
-          destination_branch: main
-          pr_title: "[Automated] ${{ github.ref }} into main"
-          github_token: ${{ secrets.TIVOBOT_GITHUB_ACTION_TOKEN }}
+          token: ${{ secrets.TIVOBOT_GITHUB_ACTION_TOKEN }}
+          title: "[Automated] v${{ env.GH_RUNNER_VERSION_UPSTREAM }} into ${{ env.PR_DESTINATION_BRANCH }}"
+          labels: repo-sync-automated
+          draft: true
+          base: "${{ env.PR_DESTINATION_BRANCH }}"
+          branch: "upstream/v${{ env.GH_RUNNER_VERSION_UPSTREAM }}"
+
+  code-changes:
+    name: "Code changes"
+    if: needs.get-runner-versions.outputs.runner_version_mismatch == 'true'
+    needs: [get-runner-versions, repo-sync]
+    runs-on: ubuntu-latest
+    env:
+      TargetBranch: repo-sync
+    steps: 
+      - name: Perform checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.TargetBranch }}
+      - name: Perform code changes
+        # The following code changes will disable the docker-in-docker checks found in ./src/Runner.Worker/ContainerOperationProvider.cs 
+        # and fixes a git command path issue in ./src/dir.proj
+        run: |
+          if [[ ! $(egrep "^\/\/\s+ServiceController\[\] scServices = ServiceController.GetServices\(\);" src/Runner.Worker/ContainerOperationProvider.cs) ]]; then
+            sed -i -e "/ServiceController\[\] scServices = ServiceController.GetServices();/,+4 s/^/\/\//" src/Runner.Worker/ContainerOperationProvider.cs
+          fi && 
+          if [[ ! $(egrep "^\/\/\s+var initProcessCgroup = File.ReadLines\(\"\/proc\/1\/cgroup\"\);" src/Runner.Worker/ContainerOperationProvider.cs) ]]; then 
+            sed -i -e "/var initProcessCgroup = File.ReadLines(\"\/proc\/1\/cgroup\");/,+4 s/^/\/\//" src/Runner.Worker/ContainerOperationProvider.cs; 
+          fi
+          if [[ ! $(grep "git update-index --assume-unchanged ./Runner.Sdk/BuildConstants.cs/" src/dir.proj) ]]; then
+            sed -i 's/git update-index --assume-unchanged .\/Runner.Sdk\/BuildConstants.cs/&\//' src/dir.proj;
+          fi
+      - name: Commit changes to ${{ env.TargetBranch }}
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: "[Automated] rm Docker-in-Docker check and fix git cmd build issue"
+          add: '["src/Runner.Worker/ContainerOperationProvider.cs", "src/dir.proj"]'

@@ -1,0 +1,15 @@
+{
+    "pull_request": {
+      "head": {
+        "ref": "repo-sync"
+      },
+      "base": {
+        "ref": "tivo-build"
+      },
+      "labels": [
+        {
+          "name": "repo-sync-automated"
+        }
+      ]
+    }
+  }
