@@ -6,14 +6,18 @@ on:
     paths:
     - releaseVersion
 
+env:
+  # release only tivo-build branch
+  WORKING_BRANCH: 'tivo-build'
+
 jobs:
   check:
-    if: startsWith(github.ref, 'refs/heads/releases/') || github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
       with:
-        ref: 'tivo-build'
+        ref: ${{ env.WORKING_BRANCH }}
 
     # Make sure ./releaseVersion match ./src/runnerversion
     # Query GitHub release ensure version is not used
@@ -112,6 +116,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v3
+      with:
+        ref: ${{ env.WORKING_BRANCH }}
 
     # Build runner layout
     - name: Build & Layout Release
@@ -230,6 +236,8 @@ jobs:
     steps:
 
     - uses: actions/checkout@v3
+      with:
+        ref: ${{ env.WORKING_BRANCH }}
 
     # Download runner package tar.gz/zip produced by 'build' job
     - name: Download Artifact
