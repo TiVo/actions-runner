@@ -378,6 +378,6 @@ jobs:
       - name: Trigger Runner Image Build
         uses: peter-evans/repository-dispatch@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.TIVOBOT_GITHUB_ACTION_TOKEN }}
           repository: tivo/docker-github-actions-runner
           event-type: start_build
