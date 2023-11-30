@@ -369,15 +369,3 @@ jobs:
         asset_path: ${{ github.workspace }}/linux-x64-trimmedpackages.json
         asset_name: actions-runner-linux-x64-${{ steps.releaseNote.outputs.version }}-trimmedpackages.json
         asset_content_type: application/octet-stream
-
-  build-image:
-    name: "Start build of runner image"
-    needs: [get-runner-versions, upstream-sync, code-changes, check, build, release]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger Runner Image Build
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ secrets.TIVOBOT_GITHUB_ACTION_TOKEN }}
-          repository: tivo/docker-github-actions-runner
-          event-type: start_build
