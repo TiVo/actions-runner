@@ -57,7 +57,7 @@ jobs:
         uses: aormsby/Fork-Sync-With-Upstream-action@v3.4
         with:
           target_sync_branch: ${{ env.WORKING_BRANCH }}
-          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+          target_repo_token: ${{ secrets.TIVOBOT_GITHUB_ACTION_TOKEN }}
           upstream_sync_branch: v${{ env.GH_RUNNER_VERSION_UPSTREAM }}
           upstream_sync_repo: actions/runner
           upstream_repo_access_token: ${{ secrets.TIVOBOT_GITHUB_ACTION_TOKEN }}
