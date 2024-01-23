@@ -137,10 +137,6 @@ jobs:
     needs: [get-runner-versions, upstream-sync, code-changes, check]
     outputs:
       linux-x64-sha: ${{ steps.sha.outputs.linux-x64-sha256 }}
-      linux-x64-sha-noexternals: ${{ steps.sha_noexternals.outputs.linux-x64-sha256 }}
-      linux-x64-sha-noruntime: ${{ steps.sha_noruntime.outputs.linux-x64-sha256 }}
-      linux-x64-sha-noruntime-noexternals: ${{ steps.sha_noruntime_noexternals.outputs.linux-x64-sha256 }}
-      osx-arm64-sha-noruntime-noexternals: ${{ steps.sha_noruntime_noexternals.outputs.osx-arm64-sha256 }}
     strategy:
       matrix:
         runtime: [ linux-x64 ]
@@ -176,81 +172,11 @@ jobs:
         file=$(ls)
         sha=$(sha256sum $file | awk '{ print $1 }')
         echo "Computed sha256: $sha for $file"
-        echo "::set-output name=${{matrix.runtime}}-sha256::$sha"
+        echo "${{matrix.runtime}}-sha256=$sha" >> $GITHUB_OUTPUT
       shell: bash
       id: sha
       name: Compute SHA256
       working-directory: _package
-    - run: |
-        file=$(ls)
-        sha=$(sha256sum $file | awk '{ print $1 }')
-        echo "Computed sha256: $sha for $file"
-        echo "::set-output name=${{matrix.runtime}}-sha256::$sha"
-        echo "::set-output name=sha256::$sha"
-      shell: bash
-      id: sha_noexternals
-      name: Compute SHA256
-      working-directory: _package_trims/trim_externals
-    - run: |
-        file=$(ls)
-        sha=$(sha256sum $file | awk '{ print $1 }')
-        echo "Computed sha256: $sha for $file"
-        echo "::set-output name=${{matrix.runtime}}-sha256::$sha"
-        echo "::set-output name=sha256::$sha"
-      shell: bash
-      id: sha_noruntime
-      name: Compute SHA256
-      working-directory: _package_trims/trim_runtime
-    - run: |
-        file=$(ls)
-        sha=$(sha256sum $file | awk '{ print $1 }')
-        echo "Computed sha256: $sha for $file"
-        echo "::set-output name=${{matrix.runtime}}-sha256::$sha"
-        echo "::set-output name=sha256::$sha"
-      shell: bash
-      id: sha_noruntime_noexternals
-      name: Compute SHA256
-      working-directory: _package_trims/trim_runtime_externals
-
-    - name: Create trimmedpackages.json for ${{ matrix.runtime }}
-      if: matrix.runtime == 'win-x64' || matrix.runtime == 'win-arm64'
-      uses: actions/github-script@0.3.0
-      with:
-        github-token: ${{secrets.GITHUB_TOKEN}}
-        script: |
-          const core = require('@actions/core')
-          const fs = require('fs');
-          const runnerVersion = fs.readFileSync('src/runnerversion', 'utf8').replace(/\n$/g, '')
-          var trimmedPackages = fs.readFileSync('src/Misc/trimmedpackages_zip.json', 'utf8').replace(/<RUNNER_VERSION>/g, runnerVersion).replace(/<RUNNER_PLATFORM>/g, '${{ matrix.runtime }}')
-          trimmedPackages = trimmedPackages.replace(/<RUNTIME_HASH>/g, '${{hashFiles('**/_layout_trims/runtime/**/*')}}')
-          trimmedPackages = trimmedPackages.replace(/<EXTERNALS_HASH>/g, '${{hashFiles('**/_layout_trims/externals/**/*')}}')
-
-          trimmedPackages = trimmedPackages.replace(/<NO_RUNTIME_EXTERNALS_HASH>/g, '${{steps.sha_noruntime_noexternals.outputs.sha256}}')
-          trimmedPackages = trimmedPackages.replace(/<NO_RUNTIME_HASH>/g, '${{steps.sha_noruntime.outputs.sha256}}')
-          trimmedPackages = trimmedPackages.replace(/<NO_EXTERNALS_HASH>/g, '${{steps.sha_noexternals.outputs.sha256}}')
-
-          console.log(trimmedPackages)
-          fs.writeFileSync('${{ matrix.runtime }}-trimmedpackages.json', trimmedPackages)
-
-    - name: Create trimmedpackages.json for ${{ matrix.runtime }}
-      if: matrix.runtime != 'win-x64' && matrix.runtime != 'win-arm64'
-      uses: actions/github-script@0.3.0
-      with:
-        github-token: ${{secrets.GITHUB_TOKEN}}
-        script: |
-          const core = require('@actions/core')
-          const fs = require('fs');
-          const runnerVersion = fs.readFileSync('src/runnerversion', 'utf8').replace(/\n$/g, '')
-          var trimmedPackages = fs.readFileSync('src/Misc/trimmedpackages_targz.json', 'utf8').replace(/<RUNNER_VERSION>/g, runnerVersion).replace(/<RUNNER_PLATFORM>/g, '${{ matrix.runtime }}')
-          trimmedPackages = trimmedPackages.replace(/<RUNTIME_HASH>/g, '${{hashFiles('**/_layout_trims/runtime/**/*')}}')
-          trimmedPackages = trimmedPackages.replace(/<EXTERNALS_HASH>/g, '${{hashFiles('**/_layout_trims/externals/**/*')}}')
-
-          trimmedPackages = trimmedPackages.replace(/<NO_RUNTIME_EXTERNALS_HASH>/g, '${{steps.sha_noruntime_noexternals.outputs.sha256}}')
-          trimmedPackages = trimmedPackages.replace(/<NO_RUNTIME_HASH>/g, '${{steps.sha_noruntime.outputs.sha256}}')
-          trimmedPackages = trimmedPackages.replace(/<NO_EXTERNALS_HASH>/g, '${{steps.sha_noexternals.outputs.sha256}}')
-
-          console.log(trimmedPackages)
-          fs.writeFileSync('${{ matrix.runtime }}-trimmedpackages.json', trimmedPackages)
 
     # Upload runner package tar.gz/zip as artifact.
     # Since each package name is unique, so we don't need to put ${{matrix}} info into artifact name
@@ -261,10 +187,6 @@ jobs:
         name: runner-packages
         path: |
           _package
-          _package_trims/trim_externals
-          _package_trims/trim_runtime
-          _package_trims/trim_runtime_externals
-          ${{ matrix.runtime }}-trimmedpackages.json
 
   release:
     if: needs.get-runner-versions.outputs.runner_version_mismatch == 'true'
@@ -295,9 +217,6 @@ jobs:
           const runnerVersion = fs.readFileSync('${{ github.workspace }}/src/runnerversion', 'utf8').replace(/\n$/g, '')
           var releaseNote = fs.readFileSync('${{ github.workspace }}/releaseNote.md', 'utf8').replace(/<RUNNER_VERSION>/g, runnerVersion)
           releaseNote = releaseNote.replace(/<LINUX_X64_SHA>/g, '${{needs.build.outputs.linux-x64-sha}}')
-          releaseNote = releaseNote.replace(/<LINUX_X64_SHA_NOEXTERNALS>/g, '${{needs.build.outputs.linux-x64-sha-noexternals}}')
-          releaseNote = releaseNote.replace(/<LINUX_X64_SHA_NORUNTIME>/g, '${{needs.build.outputs.linux-x64-sha-noruntime}}')
-          releaseNote = releaseNote.replace(/<LINUX_X64_SHA_NORUNTIME_NOEXTERNALS>/g, '${{needs.build.outputs.linux-x64-sha-noruntime-noexternals}}')
           console.log(releaseNote)
           core.setOutput('version', runnerVersion);
           core.setOutput('note', releaseNote);
@@ -320,6 +239,7 @@ jobs:
         body: |
           ${{ steps.releaseNote.outputs.note }}
 
+    # Upload release assets (full runner packages)
     - name: Upload Release Asset (linux-x64)
       uses: actions/upload-release-asset@v1.0.1
       env:
@@ -328,44 +248,4 @@ jobs:
         upload_url: ${{ steps.createRelease.outputs.upload_url }}
         asset_path: ${{ github.workspace }}/_package/actions-runner-linux-x64-${{ steps.releaseNote.outputs.version }}.tar.gz
         asset_name: actions-runner-linux-x64-${{ steps.releaseNote.outputs.version }}.tar.gz
-        asset_content_type: application/octet-stream
-
-    - name: Upload Release Asset (linux-x64-noexternals)
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.createRelease.outputs.upload_url }}
-        asset_path: ${{ github.workspace }}/_package_trims/trim_externals/actions-runner-linux-x64-${{ steps.releaseNote.outputs.version }}-noexternals.tar.gz
-        asset_name: actions-runner-linux-x64-${{ steps.releaseNote.outputs.version }}-noexternals.tar.gz
-        asset_content_type: application/octet-stream
-
-    - name: Upload Release Asset (linux-x64-noruntime)
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.createRelease.outputs.upload_url }}
-        asset_path: ${{ github.workspace }}/_package_trims/trim_runtime/actions-runner-linux-x64-${{ steps.releaseNote.outputs.version }}-noruntime.tar.gz
-        asset_name: actions-runner-linux-x64-${{ steps.releaseNote.outputs.version }}-noruntime.tar.gz
-        asset_content_type: application/octet-stream
-
-    - name: Upload Release Asset (linux-x64-noruntime-noexternals)
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.createRelease.outputs.upload_url }}
-        asset_path: ${{ github.workspace }}/_package_trims/trim_runtime_externals/actions-runner-linux-x64-${{ steps.releaseNote.outputs.version }}-noruntime-noexternals.tar.gz
-        asset_name: actions-runner-linux-x64-${{ steps.releaseNote.outputs.version }}-noruntime-noexternals.tar.gz
-        asset_content_type: application/octet-stream
-
-    - name: Upload Release Asset (linux-x64-trimmedpackages.json)
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.createRelease.outputs.upload_url }}
-        asset_path: ${{ github.workspace }}/linux-x64-trimmedpackages.json
-        asset_name: actions-runner-linux-x64-${{ steps.releaseNote.outputs.version }}-trimmedpackages.json
         asset_content_type: application/octet-stream
