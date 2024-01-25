@@ -66,7 +66,7 @@ jobs:
 
   code-changes:
     name: "Code changes"
-    if: needs.get-runner-versions.outputs.runner_version_mismatch == 'true'
+    if: ${{ !github.event.act }}
     needs: [get-runner-versions, upstream-sync]
     runs-on: ubuntu-latest
     steps:
@@ -94,7 +94,7 @@ jobs:
           add: '["src/Runner.Worker/ContainerOperationProvider.cs", "src/dir.proj"]'
 
   check:
-    if: needs.get-runner-versions.outputs.runner_version_mismatch == 'true' && github.ref == 'refs/heads/main'
+    if: ${{ !github.event.act }}
     needs: [get-runner-versions, upstream-sync, code-changes]
     runs-on: ubuntu-latest
     steps:
@@ -200,7 +200,7 @@ jobs:
 
     # Download runner package tar.gz/zip produced by 'build' job
     - name: Download Artifact
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v2
       with:
         name: runner-packages
         path: ./
@@ -222,7 +222,7 @@ jobs:
           core.setOutput('note', releaseNote);
 
     - name: Validate Packages HASH
-      working-directory: _package
+      # working-directory: _package
       run: |
         ls -l
         echo "${{needs.build.outputs.linux-x64-sha}}  actions-runner-linux-x64-${{ steps.releaseNote.outputs.version }}.tar.gz" | shasum -a 256 -c
