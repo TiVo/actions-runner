@@ -1,10 +1,11 @@
 name: Runner CD
 
 on:
-  workflow_dispatch:
-  push:
-    paths:
-    - releaseVersion
+  workflow_call:
+  # workflow_dispatch:
+  # push:
+  #   paths:
+  #   - releaseVersion
 
 env:
   # release only tivo-build branch
