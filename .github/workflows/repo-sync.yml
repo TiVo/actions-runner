@@ -16,12 +16,14 @@ jobs:
       runner_version_mismatch: ${{ steps.compare_runner_versions.outputs.runner_version_mismatch }}
       runner_version_upstream: ${{ steps.get_upstream_ver.outputs.runner_version }}
       runner_version_tivo: ${{ steps.get_tivo_ver.outputs.runner_version }}
+      runner_upstream_branch: ${{ steps.get_upstream_ver.outputs.upstream_branch}}
     steps:
       - name: Get version number of latest actions/runner release
         id: get_upstream_ver
         run: |
           UPSTREAM_VER=$(curl -sL https://api.github.com/repos/actions/runner/releases/latest | jq -r .tag_name | cut -c2-)
           echo "GH_RUNNER_VERSION_UPSTREAM=$UPSTREAM_VER" >> $GITHUB_ENV
+          echo "upstream_branch=releases/m$(echo $UPSTREAM_VER | awk -F '.' '{print $2}')" >> $GITHUB_OUTPUT
           echo "runner_version=$UPSTREAM_VER" >> $GITHUB_OUTPUT
 
       - name: Get version number of latest tivo/actions-runner release
@@ -47,6 +49,7 @@ jobs:
       GH_RUNNER_VERSION_MISMATCH: ${{ needs.get-runner-versions.outputs.runner_version_mismatch }}
       GH_RUNNER_VERSION_UPSTREAM: ${{ needs.get-runner-versions.outputs.runner_version_upstream }}
       GH_RUNNER_VERSION_TIVO: ${{ needs.get-runner-versions.outputs.runner_version_tivo }}
+      GH_RUNNER_UPSTREAM_BRANCH: ${{ needs.get-runner-versions.outputs.runner_upstream_branch }}
     steps:
       - name: Perform checkout
         uses: actions/checkout@v3
@@ -58,7 +61,7 @@ jobs:
         with:
           target_sync_branch: ${{ env.WORKING_BRANCH }}
           target_repo_token: ${{ secrets.GITHUB_TOKEN }}
-          upstream_sync_branch: v${{ env.GH_RUNNER_VERSION_UPSTREAM }}
+          upstream_sync_branch: v${{ env.GH_RUNNER_UPSTREAM_BRANCH }}
           upstream_sync_repo: actions/runner
           upstream_repo_access_token: ${{ secrets.TIVOBOT_GITHUB_ACTION_TOKEN }}
           upstream_pull_args: '-s recursive -Xtheirs' # overwrite everything in tivo-build branch
