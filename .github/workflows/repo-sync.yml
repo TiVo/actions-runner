@@ -23,7 +23,7 @@ jobs:
         run: |
           UPSTREAM_VER=$(curl -sL https://api.github.com/repos/actions/runner/releases/latest | jq -r .tag_name | cut -c2-)
           echo "GH_RUNNER_VERSION_UPSTREAM=$UPSTREAM_VER" >> $GITHUB_ENV
-          echo "upstream_branch=releases/m$(echo $UPSTREAM_VER | awk -F '.' '{print $2}' -)" >> $GITHUB_OUTPUT
+          echo "upstream_branch=releases/m$(echo $UPSTREAM_VER | awk -F '.' '{print ($3 == "0" ? $2 : $2 "." $3)}' -)" >> $GITHUB_OUTPUT
           echo "runner_version=$UPSTREAM_VER" >> $GITHUB_OUTPUT
 
       - name: Get version number of latest tivo/actions-runner release
