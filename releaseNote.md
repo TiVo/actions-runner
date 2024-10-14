@@ -1,8 +1,17 @@
 ## What's Changed
 
-- .NET 8 compat test adjustments: 1) do not trim SDK, 2) support pattern to match output, 3) modify output truncation length https://github.com/actions/runner/pull/3427
+- Adding Snapshot additional mapping tokens https://github.com/actions/runner/pull/3468
+- Create launch httpclient using the right handler and setting https://github.com/actions/runner/pull/3476
+- Fix missing default user-agent for jitconfig runner https://github.com/actions/runner/pull/3473
+- Cleanup back-compat code for interpreting Run Service status codes https://github.com/actions/runner/pull/3456
+- Add runner or worker to the useragent https://github.com/actions/runner/pull/3457
+- Handle Error Body in Responses from Broker https://github.com/actions/runner/pull/3454
+- Fix issues for composite actions (Run Service flow) https://github.com/actions/runner/pull/3446
+- Trace GitHub RequestId to log https://github.com/actions/runner/pull/3442
+- Add `jq`, `git`, `unzip` and `curl` to default packages installed https://github.com/actions/runner/pull/3056
+- Add pid to user-agent and session owner https://github.com/actions/runner/pull/3432
 
-**Full Changelog**: https://github.com/actions/runner/compare/v2.319.0...v2.319.1
+**Full Changelog**: https://github.com/actions/runner/compare/v2.319.1...v2.320.0
 
 _Note: Actions Runner follows a progressive release policy, so the latest release might not be available to your enterprise, organization, or repository yet.
 To confirm which version of the Actions Runner you should expect, please view the download instructions for your enterprise, organization, or repository.
